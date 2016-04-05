@@ -13,7 +13,7 @@ install.packages(packageurl, repos=NULL, type="source")
 #And it finally worked!
 
 #DATA
-natural <- read.csv('Desktop/benthics_2016_natural.csv', stringsAsFactors = FALSE)
+natural <- read.csv('Desktop/benthics_2016_natural.csv')
 natural <- mutate(natural, total = mac + other)
 natural$Date <- factor(natural$Date, levels = c('July', 'August', 'September', 'January'))
 ______________________________________________________
@@ -210,3 +210,94 @@ summary(figc)
 
 #Ugh, I no longer know where I am going with this. These figures look nothing 
 #like what I was expecting, and I actually have no idea what any of them mean
+
+#Notes from phone call with Jarrett 4/4, 
+
+#So, this is a mixed model ANCOVA with a random effect of tag.  Note the 
+#interaction between Date and time.
+
+library(nlme)
+MODEL1_NLME <- lme(mac ~ Date * total, data = natural,
+                   random=~1|Tag)
+
+Anova(MODEL1_NLME)
+summary(MODEL1_NLME)
+plot(MODEL1_NLME)
+
+#Improved residuals by log transforming
+MODEL1_NLME <- lme(log(Mac+1) ~ Date * Total, data = NPC,
+                   random=~1|Tag)
+
+Anova(MODEL1_NLME)
+summary(MODEL1_NLME)
+plot(MODEL1_NLME)
+
+plot(residuals(MODEL1_NLME), log(NPC$Mac+1))
+plot(residuals(MODEL1_NLME), fitted(MODEL1_NLME))
+qqnorm(residuals(MODEL1_NLME))
+qqline(residuals(MODEL1_NLME))
+
+?qqnorm
+
+#This is just another way to graph the proportion of mac to total, 
+#NOT how total dens affects mac density
+
+MODEL1_NLMEfig <- ggplot() + geom_point(aes(x=natural$total, y=natural$mac))
+MODEL1_NLMEfig
+
+______________________________________________________
+MODEL2_NLME <- lme(log(Mac+1) ~ Date + Mac, data = NPC)
+Anova(MODEL2_NLME)
+summary(MODEL2_NLME)
+
+#maybe this doesn't work because of testing mac on itself, which i think is illogical
+_________________________
+NPC <- read.csv('Desktop/proofedNPC.csv')
+head(NPC)
+
+MODEL6_NLME <- lme(log(Mac+1) ~ Date * Total, data = NPC,
+                   random=~1|Tag)
+
+Anova(MODEL6_NLME)
+summary(MODEL6_NLME)
+plot(MODEL6_NLME)
+
+plot(residuals(MODEL6_NLME), log(NPC$Mac+1))
+plot(residuals(MODEL6_NLME), fitted(MODEL6_NLME))
+qqnorm(residuals(MODEL6_NLME))
+qqline(residuals(MODEL6_NLME))
+
+#Cool, everything Jarrett wrote works the same with new data sheet
+
+MODEL8_NLME <- lme(PropMac ~ Date * Mac, data = NPC,
+                   random=~1|Tag)
+
+Anova(MODEL8_NLME)
+summary(MODEL8_NLME)
+plot(MODEL8_NLME)
+
+plot(residuals(MODEL8_NLME), log(NPC$Mac+1))
+plot(residuals(MODEL8_NLME), fitted(MODEL8_NLME))
+qqnorm(residuals(MODEL8_NLME))
+qqline(residuals(MODEL8_NLME))
+
+?lme
+MODEL8_NLMEfig <- ggplot() + geom_point(aes(x=NPC$Mac, y=NPC$PropMac))
+MODEL8_NLMEfig
+__________________________________________
+MODEL9_NLME <- lme(PropMac ~ Date * Total, data = NPC,
+                   random=~1|Tag)
+
+Anova(MODEL9_NLME)
+summary(MODEL9_NLME)
+plot(MODEL9_NLME)
+
+plot(residuals(MODEL9_NLME), log(NPC$Mac+1))
+plot(residuals(MODEL9_NLME), fitted(MODEL9_NLME))
+qqnorm(residuals(MODEL9_NLME))
+qqline(residuals(MODEL9_NLME))
+
+
+MODEL9_NLMEfig <- ggplot() + geom_point(aes(x=NPC$Total, y=NPC$PropMac))
+MODEL9_NLMEfig
+
